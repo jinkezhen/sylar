@@ -1,0 +1,118 @@
+// 用于定义sylar框架中NameServer(名称服务)的通信结构
+
+// 定义该.proto文件生成代码时的命名空间
+// 但 Protobuf 会自动把 package 转换成 C++ 命名空间结构，从而实现良好的集成。
+// package sylar.ns;
+// message MyMsg {}
+// 执行 protoc --cpp_out=. my.proto
+// 会生成对应的C++文件
+//namespace sylar {
+//namespace ns {
+//class MyMsg { ... };
+//
+//}  // namespace ns
+//}  // namespace sylar
+
+
+//一个服务端（Provider）向 NameServer 注册服务
+//一个客户端（Consumer）向 NameServer 查询服务
+// NameServer 主动通知客户端服务变更
+
+
+
+// 表示一个服务节点
+message Node {
+	optional string ip = 1;     // ip地址
+	optional uint32 port = 2;   // 端口号
+	optional uint32 weight = 3; // 节点权重，用于负载均衡策略
+}
+
+// 一条注册项，表示某个节点提供了某个域名下的某些命令服务
+message RegisterInfo {
+	optional string domain = 1; //域名
+	repeated uint32 cmds = 2;   // 该服务支持的命令编号
+	optional Node node = 3;     // 提供该服务的节点信息
+}
+
+// 客户端向NameServer发送的注册请求，可能包含多个服务注册信息
+//RegisterRequest {
+//  infos: [
+//    {
+//      domain: "order_service"
+//      cmds: [1001, 1002]
+//      node: {
+//        ip: "192.168.1.100"
+//        port: 8080
+//        weight: 10
+//      }
+//    }
+//  ]
+//}
+message RegisterRequest {
+	repeated RegisterInfo infos = 1;  // 注册信息列表
+}
+
+// 客户端向NameServer发起的服务查询请求
+//QueryRequest {
+//  domains: ["order_service", "user_service"]
+//}
+message QueryRequest {
+	repeated string domains = 1;  // 要查询的服务域名列表
+}
+
+// NameServer 响应服务查询或变更通知时使用的服务节点结构体
+message NodeInfo {
+	optional string domain = 1;  // 服务域名
+	optional uint32 cmd = 2;     // 命令编号
+	repeated Node nodes = 3;     // 提供该服务的节点列表
+}
+
+// NameServer 返回给客户端的服务节点查询响应
+//QueryResponse {
+//  infos: [
+//    {
+//      domain: "order_service"
+//      cmd: 1001
+//      nodes: [
+//        { ip: "192.168.1.100", port: 8080, weight: 10 },
+//        { ip: "192.168.1.101", port: 8080, weight: 5 }
+//      ]
+//    },
+//   {
+//      domain: "user_service"
+//      cmd: 2001
+//      nodes: [
+//        { ip: "192.168.1.120", port: 9000, weight: 10 }
+//      ]
+//    }
+//  ]
+//}
+message QueryResponse {
+	repeated NodeInfo infos = 1;  // 每个查询域名对应的节点信息集合
+}
+
+// NameServer 主动通知客户端服务节点变更（新增、删除）的消息结构
+//NotifyMessage {
+// dels: [
+//    {
+//      domain: "order_service"
+//      cmd: 1001
+//      nodes: [
+//        { ip: "192.168.1.101", port: 8080, weight: 5 }
+//      ]
+//    }
+//  ],
+//  updates: [
+//    {
+//      domain: "order_service"
+//      cmd: 1001
+//      nodes: [
+//        { ip: "192.168.1.100", port: 8080, weight: 20 } // 权重更新
+//      ]
+//    }
+//  ]
+//}
+message NotifyMessage {
+	repeated NodeInfo dels = 1;    // 被移除的服务节点（注销）
+	repeated NodeInfo updates = 2; // 新增或变更的服务节点（注册或更新）
+}

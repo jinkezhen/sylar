@@ -1,0 +1,17 @@
+servers:
+-type : http
+name : http_server
+address :
+-0.0.0.0 : 8020
+-0.0.0.1 : 8021
+keepalive : true
+timeout : 10000
+ssl : false
+
+- type : rock
+name : rock_server
+address :
+-0.0.0.0 : 8050
+keepalive : true
+timeout : 10000
+ssl : false
